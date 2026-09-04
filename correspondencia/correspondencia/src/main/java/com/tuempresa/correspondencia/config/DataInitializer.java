@@ -57,7 +57,7 @@ public class DataInitializer implements CommandLineRunner {
                     .email("publico@correo.com")
                     .passwordHash(encoder.encode("publico123"))
                     .rol(ciudadano).estado(true).build());
-            log.info("✅ Usuario público creado para radicaciones anónimas");
+            log.info("✅ Usuario público creado para radicaciones anónima");
         }
     }
 }
