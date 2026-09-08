@@ -3,41 +3,32 @@ package com.tuempresa.correspondencia.service;
 import com.tuempresa.correspondencia.entity.*;
 import com.tuempresa.correspondencia.exception.*;
 import com.tuempresa.correspondencia.repository.*;
+import com.tuempresa.correspondencia.service.storage.StorageService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.*;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.nio.file.*;
 import java.util.List;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class AnexoService {
     private final AnexoRepository repo;
     private final RadicadoRepository radRepo;
-
-    @Value("${app.uploads.dir}")
-    private String uploadsDir;
+    private final StorageService storage;
 
     public Anexo subir(Long radicadoId, MultipartFile file, Usuario quien) throws IOException {
         Radicado r = radRepo.findById(radicadoId)
                 .orElseThrow(() -> new ResourceNotFoundException("Radicado no encontrado"));
-        Path dir = Paths.get(uploadsDir);
-        if (!Files.exists(dir)) Files.createDirectories(dir);
 
-        String nombreOriginal = file.getOriginalFilename();
-        String nombreGuardado = UUID.randomUUID() + "_" + nombreOriginal;
-        Path destino = dir.resolve(nombreGuardado);
-        Files.copy(file.getInputStream(), destino);
+        String referencia = storage.guardar(file);
 
         Anexo a = Anexo.builder()
                 .radicado(r)
-                .nombreArchivo(nombreOriginal)
-                .rutaAlmacenamiento(destino.toString())
+                .nombreArchivo(file.getOriginalFilename())
+                .rutaAlmacenamiento(referencia)
                 .tipoMime(file.getContentType())
                 .tamanoBytes(file.getSize())
                 .usuarioCarga(quien)
@@ -53,10 +44,8 @@ public class AnexoService {
         Anexo a = repo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Anexo no encontrado"));
         try {
-            Resource r = new UrlResource(Paths.get(a.getRutaAlmacenamiento()).toUri());
-            if (!r.exists()) throw new ResourceNotFoundException("Archivo físico no encontrado");
-            return r;
-        } catch (Exception e) {
+            return storage.cargar(a.getRutaAlmacenamiento());
+        } catch (IOException e) {
             throw new BusinessException("Error al descargar: " + e.getMessage());
         }
     }
@@ -68,10 +57,7 @@ public class AnexoService {
     public void eliminar(Long id) {
         Anexo a = repo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Anexo no encontrado"));
-        try { Files.deleteIfExists(Paths.get(a.getRutaAlmacenamiento())); } catch (IOException ignored) {}
+        storage.eliminar(a.getRutaAlmacenamiento());
         repo.delete(a);
-    }
-
-    public static class RefreshTokenService {
     }
 }

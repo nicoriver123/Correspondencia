@@ -12,6 +12,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -23,19 +24,15 @@ public class PqrsController {
     private final UsuarioRepository userRepo;
     private final PqrsRepository pqrsRepo;
 
-    @PostMapping
-    public ResponseEntity<PqrsResponse> radicar(@Valid @RequestBody PqrsRequest req,
-                                                @AuthenticationPrincipal UserDetails ud) {
-        Usuario u;
-        if (ud != null) {
-            // Si está logueado, usa su usuario real
-            u = userRepo.findByEmail(ud.getUsername()).orElseThrow();
-        } else {
-            // Si es público, usa el usuario "publico@correo.com" que creamos en DataInitializer
-            u = userRepo.findByEmail("publico@correo.com")
-                    .orElseThrow(() -> new RuntimeException("Usuario público no configurado en la base de datos"));
-        }
-        return ResponseEntity.status(201).body(service.radicar(req, u));
+    @PostMapping(consumes = "multipart/form-data")
+    public ResponseEntity<PqrsResponse> radicar(
+            @RequestPart("datos") @Valid PqrsRequest req,
+            @RequestPart(value = "archivos", required = false) List<MultipartFile> archivos,
+            @AuthenticationPrincipal UserDetails ud) {
+        Usuario u = (ud != null)
+                ? userRepo.findByEmail(ud.getUsername()).orElseThrow()
+                : userRepo.findByEmail("publico@correo.com").orElseThrow();
+        return ResponseEntity.status(201).body(service.radicar(req, u, archivos));
     }
     @GetMapping
     @PreAuthorize("hasAnyRole('FUNCIONARIO','ADMIN','JEFE_DEPENDENCIA')")

@@ -12,6 +12,9 @@ import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -32,6 +35,9 @@ public class PqrsService {
     private final CalculadoraDiasHabiles calcHabiles;
     private final NotificacionService notifService;
     private final EmailService emailService;
+    private final AnexoService anexoService;
+    private static final Logger log = LoggerFactory.getLogger(PqrsService.class);
+
 
     private static final Map<String, Integer> TERMINOS_DIAS = Map.of(
             "PETICION", 15, "QUEJA", 15, "RECLAMO", 15,
@@ -39,7 +45,7 @@ public class PqrsService {
     );
 
     @Transactional
-    public PqrsResponse radicar(PqrsRequest req, Usuario quienRadica) {
+    public PqrsResponse radicar(PqrsRequest req, Usuario quienRadica, List<MultipartFile> archivos) {
         Tercero tercero = terceroService.obtenerOCrear(
                 req.getNombreTercero(), req.getIdentificacionTercero(),
                 req.getTipoPersona(), req.getEmailTercero(),
@@ -85,6 +91,19 @@ public class PqrsService {
         }
         if (tercero.getEmail() != null && !tercero.getEmail().isBlank()) {
             emailService.notificarRadicacion(tercero.getEmail(), r.getNumeroRadicado(), r.getAsunto(), "PQRS");
+        }
+
+        if (archivos != null) {
+            for (MultipartFile archivo : archivos) {
+                if (archivo != null && !archivo.isEmpty()) {
+                    try {
+                        anexoService.subir(r.getId(), archivo, quienRadica);
+                    } catch (java.io.IOException e) {
+                        log.warn("No se pudo guardar el anexo {}: {}",
+                                archivo.getOriginalFilename(), e.getMessage());
+                    }
+                }
+            }
         }
 
         return toDto(p);
