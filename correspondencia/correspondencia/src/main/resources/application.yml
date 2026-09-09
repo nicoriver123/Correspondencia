@@ -2,7 +2,7 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/correspondencia
     username: postgres
-    password: postgres
+    password: moyanoms
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:

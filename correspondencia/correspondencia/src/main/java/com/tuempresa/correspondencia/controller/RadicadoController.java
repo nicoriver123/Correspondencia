@@ -36,7 +36,19 @@ public class RadicadoController {
     @PreAuthorize("hasAnyRole('FUNCIONARIO','ADMIN','JEFE_DEPENDENCIA')")
     public ResponseEntity<Page<RadicadoResponse>> listar(
             @org.springframework.web.bind.annotation.ModelAttribute RadicadoFilter filter,
-            Pageable p) {
+            Pageable p,
+            @AuthenticationPrincipal UserDetails ud) {
+
+        Usuario u = userRepo.findByEmail(ud.getUsername()).orElseThrow();
+
+        if ("JEFE_DEPENDENCIA".equals(u.getRol().getNombre()) && u.getDependencia() != null) {
+            filter.setDependenciaId(u.getDependencia().getId());
+        }
+        // FUNCIONARIO: RadicadoFilter no tiene "usuarioAsignadoId" (ese concepto vive
+        // en Pqrs, no en Radicado), así que por ahora ve todos los radicados de
+        // cualquier dependencia. Si más adelante quieres acotarlo también, dime y
+        // lo ajustamos.
+
         return ResponseEntity.ok(service.listar(filter, p));
     }
 
