@@ -15,9 +15,10 @@ import java.util.List;
 public class NotificacionService {
     private final NotificacionRepository repo;
 
-    public void enviar(Usuario destinatario, String titulo, String mensaje) {
+    public void enviar(Usuario destinatario, String titulo, String mensaje, Long pqrsId, Long radicadoId) {
         repo.save(Notificacion.builder()
-                .usuario(destinatario).titulo(titulo).mensaje(mensaje).leida(false).build());
+                .usuario(destinatario).titulo(titulo).mensaje(mensaje).leida(false)
+                .pqrsId(pqrsId).radicadoId(radicadoId).build());
     }
 
     public List<NotificacionResponse> listarNoLeidas(Long userId) {
@@ -35,6 +36,7 @@ public class NotificacionService {
     private NotificacionResponse toDto(Notificacion n) {
         return NotificacionResponse.builder()
                 .id(n.getId()).titulo(n.getTitulo()).mensaje(n.getMensaje())
-                .leida(n.getLeida()).fecha(n.getFecha()).build();
+                .leida(n.getLeida()).fecha(n.getFecha())
+                .pqrsId(n.getPqrsId()).radicadoId(n.getRadicadoId()).build();
     }
 }

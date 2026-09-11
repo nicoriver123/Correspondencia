@@ -87,7 +87,8 @@ public class PqrsService {
                 .build());
 
         if (destino.getJefe() != null) {
-            notifService.enviar(destino.getJefe(), "Nueva PQRS en tu dependencia", r.getNumeroRadicado() + " - " + req.getAsunto());
+            notifService.enviar(destino.getJefe(), "Nueva PQRS en tu dependencia",
+                    r.getNumeroRadicado() + " - " + req.getAsunto(), p.getId(), r.getId());
         }
         if (tercero.getEmail() != null && !tercero.getEmail().isBlank()) {
             emailService.notificarRadicacion(tercero.getEmail(), r.getNumeroRadicado(), r.getAsunto(), "PQRS");
@@ -164,8 +165,9 @@ public class PqrsService {
                     .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
 
             p.setUsuarioAsignado(asignado);
-            notifService.enviar(asignado, "PQRS asignada", p.getRadicado().getNumeroRadicado() + " - " + p.getRadicado().getAsunto());
-
+            notifService.enviar(asignado, "PQRS asignada",
+                    p.getRadicado().getNumeroRadicado() + " - " + p.getRadicado().getAsunto(),
+                    p.getId(), p.getRadicado().getId());
             // 2. DESPUÉS se usa
             if (asignado.getEmail() != null) {
                 emailService.notificarAsignacion(asignado.getEmail(), p.getRadicado().getNumeroRadicado(), p.getRadicado().getAsunto());

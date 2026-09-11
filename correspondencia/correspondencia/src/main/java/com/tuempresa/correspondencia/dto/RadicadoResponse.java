@@ -19,4 +19,5 @@ public class RadicadoResponse {
     private String estado;
     private Boolean vencido;
     private Integer diasRestantes;
+    private String tipoCorrespondencia; // nombre, para mostrarlo en el listado/detalle
 }

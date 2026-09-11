@@ -13,4 +13,5 @@ public class RadicadoRequest {
     @NotNull private Long dependenciaDestinoId;
     private Long tipoDocumentoId;
     private String medioRecepcion;
+    private Long tipoCorrespondenciaId; // opcional
 }

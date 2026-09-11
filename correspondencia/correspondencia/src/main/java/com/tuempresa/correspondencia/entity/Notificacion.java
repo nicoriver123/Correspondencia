@@ -26,6 +26,14 @@ public class Notificacion {
 
     private LocalDateTime fecha;
 
+    // A qué registro lleva el clic en la notificación. pqrsId cuando es sobre
+    // una PQRS puntual (la mayoría de los casos); radicadoId cuando es sobre
+    // un radicado general que puede no tener PQRS asociada. Ambos nullable:
+    // una notificación vieja o genérica puede no tener ninguno de los dos.
+    private Long pqrsId;
+
+    private Long radicadoId;
+
     @PrePersist
     public void prePersist() { this.fecha = LocalDateTime.now(); }
 }

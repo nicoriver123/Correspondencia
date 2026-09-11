@@ -15,10 +15,13 @@ public class PqrsSpecification {
 
             if (f.getTextoLibre() != null && !f.getTextoLibre().isBlank()) {
                 String like = "%" + f.getTextoLibre().toLowerCase() + "%";
+                Join<Object, Object> tercero = rad.join("tercero", JoinType.LEFT);
                 Predicate p1 = cb.like(cb.lower(rad.get("numeroRadicado")), like);
                 Predicate p2 = cb.like(cb.lower(rad.get("asunto")), like);
                 Predicate p3 = cb.like(cb.lower(rad.get("descripcion")), like);
-                p = cb.and(p, cb.or(p1, p2, p3));
+                Predicate p4 = cb.like(cb.lower(tercero.get("nombreRazonSocial")), like);
+                Predicate p5 = cb.like(cb.lower(tercero.get("numeroIdentificacion")), like);
+                p = cb.and(p, cb.or(p1, p2, p3, p4, p5));
             }
             if (f.getTipoPqrs() != null)
                 p = cb.and(p, cb.equal(root.get("tipoPqrs"), f.getTipoPqrs()));

@@ -9,4 +9,6 @@ public class NotificacionResponse {
     private String mensaje;
     private Boolean leida;
     private LocalDateTime fecha;
+    private Long pqrsId;
+    private Long radicadoId;
 }

@@ -35,18 +35,20 @@ public class TerminosPqrsScheduler {
                       emailService.notificarProximoVencimiento(p.getUsuarioAsignado().getEmail(),
                               p.getRadicado().getNumeroRadicado(), dias);
                   }
-                if (p.getUsuarioAsignado() != null) {
-                    notifService.enviar(p.getUsuarioAsignado(),
-                            "⚠️ PQRS próxima a vencer",
-                            "Radicado " + p.getRadicado().getNumeroRadicado()
-                                    + " vence en " + dias + " día(s).");
-                }
-                if (p.getRadicado().getDependenciaDestino() != null
-                        && p.getRadicado().getDependenciaDestino().getJefe() != null) {
-                    notifService.enviar(p.getRadicado().getDependenciaDestino().getJefe(),
-                            "🚨 PQRS por vencer en tu dependencia",
-                            p.getRadicado().getNumeroRadicado());
-                }
+                  if (p.getUsuarioAsignado() != null) {
+                      notifService.enviar(p.getUsuarioAsignado(),
+                              "⚠️ PQRS próxima a vencer",
+                              "Radicado " + p.getRadicado().getNumeroRadicado()
+                                      + " vence en " + dias + " día(s).",
+                              p.getId(), p.getRadicado().getId());
+                  }
+                  if (p.getRadicado().getDependenciaDestino() != null
+                          && p.getRadicado().getDependenciaDestino().getJefe() != null) {
+                      notifService.enviar(p.getRadicado().getDependenciaDestino().getJefe(),
+                              "🚨 PQRS por vencer en tu dependencia",
+                              p.getRadicado().getNumeroRadicado(),
+                              p.getId(), p.getRadicado().getId());
+                  }
             } else if (dias < 0) {
                 log.warn("PQRS VENCIDA: {}", p.getRadicado().getNumeroRadicado());
             }

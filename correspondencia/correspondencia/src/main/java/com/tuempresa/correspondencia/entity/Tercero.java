@@ -2,6 +2,7 @@ package com.tuempresa.correspondencia.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "terceros")
@@ -22,4 +23,17 @@ public class Tercero {
     private String direccion;
     private String telefono;
     private String email;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean estado = true;
+
+    @Column(name = "fecha_registro")
+    private LocalDateTime fechaRegistro;
+
+    @PrePersist
+    public void prePersist() {
+        if (fechaRegistro == null) fechaRegistro = LocalDateTime.now();
+        if (estado == null) estado = true;
+    }
 }

@@ -26,6 +26,7 @@ public class RadicadoService {
     private final GeneradorNumeroRadicado generador;
     private final NotificacionService notifService;
     private final RespuestaRepository respRepo;
+    private final TipoCorrespondenciaRepository tipoCorrespondenciaRepo;
 
     @Transactional
     public RadicadoResponse crear(RadicadoRequest req, Usuario quienRadica) {
@@ -35,6 +36,10 @@ public class RadicadoService {
                 .orElseThrow(() -> new ResourceNotFoundException("Dependencia destino no encontrada"));
         TipoDocumento tipoDoc = req.getTipoDocumentoId() != null
                 ? tipoDocRepo.findById(req.getTipoDocumentoId()).orElse(null) : null;
+        TipoCorrespondencia tipoCorr = req.getTipoCorrespondenciaId() != null
+                ? tipoCorrespondenciaRepo.findById(req.getTipoCorrespondenciaId())
+                .orElseThrow(() -> new ResourceNotFoundException("Tipo de correspondencia no encontrado"))
+                : null;
 
         Radicado r = Radicado.builder()
                 .numeroRadicado(generador.generar(req.getTipo()))
@@ -45,6 +50,7 @@ public class RadicadoService {
                 .dependenciaDestino(destino)
                 .usuarioRadica(quienRadica)
                 .tipoDocumento(tipoDoc)
+                .tipoCorrespondencia(tipoCorr)
                 .medioRecepcion(req.getMedioRecepcion())
                 .estado("RADICADO")
                 .build();
@@ -56,8 +62,10 @@ public class RadicadoService {
         if (destino.getJefe() != null) {
             notifService.enviar(destino.getJefe(),
                     "Nuevo radicado en tu dependencia",
-                    "Radicado " + r.getNumeroRadicado() + ": " + r.getAsunto());
+                    "Radicado " + r.getNumeroRadicado() + ": " + r.getAsunto(),
+                    null, r.getId());
         }
+
         return toDto(r);
     }
 
@@ -127,6 +135,7 @@ public class RadicadoService {
                 .dependenciaDestino(r.getDependenciaDestino() != null ? r.getDependenciaDestino().getNombre() : null)
                 .usuarioRadica(r.getUsuarioRadica() != null ? r.getUsuarioRadica().getNombre() : null)
                 .tipoDocumento(r.getTipoDocumento() != null ? r.getTipoDocumento().getNombre() : null)
+                .tipoCorrespondencia(r.getTipoCorrespondencia() != null ? r.getTipoCorrespondencia().getNombre() : null)
                 .medioRecepcion(r.getMedioRecepcion())
                 .estado(r.getEstado())
                 .build();

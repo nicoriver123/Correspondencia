@@ -44,6 +44,9 @@ public class Radicado {
 
     @Column(name = "medio_recepcion")
     private String medioRecepcion;
+    @ManyToOne
+    @JoinColumn(name = "tipo_correspondencia_id")
+    private TipoCorrespondencia tipoCorrespondencia; // opcional: clasificación fina además de "tipo" (ENTRADA/SALIDA/INTERNO)
 
     @Column(nullable = false)
     @Builder.Default

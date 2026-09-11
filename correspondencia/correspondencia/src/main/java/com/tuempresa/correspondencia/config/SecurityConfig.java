@@ -42,6 +42,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/pqrs").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/pqrs/numero/*/estado").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/radicados/numero/*").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/empresa").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/empresa/logo").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/categorias-pqrs").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/dependencias").permitAll()
                         .anyRequest().authenticated()
