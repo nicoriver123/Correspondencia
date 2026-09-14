@@ -15,15 +15,10 @@ import java.util.Map;
 @RequiredArgsConstructor
 @PreAuthorize("hasAnyRole('ADMIN','JEFE_DEPENDENCIA','FUNCIONARIO')")
 public class DashboardController {
-
     private final DashboardService service;
 
     @GetMapping("/resumen")
-    public ResponseEntity<Map<String, Object>> resumen(
-            @AuthenticationPrincipal UserDetails ud) {
-
-        return ResponseEntity.ok(
-                service.getResumen(ud)
-        );
+    public ResponseEntity<Map<String, Object>> resumen(@AuthenticationPrincipal UserDetails ud) {
+        return ResponseEntity.ok(service.getResumen(ud));
     }
 }

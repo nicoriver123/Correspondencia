@@ -5,29 +5,19 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "tipos_correspondencia")
+@Table(name = "categorias_correspondencia")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
-public class TipoCorrespondencia {
+public class CategoriaCorrespondencia {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "categoria_id")
-    private CategoriaCorrespondencia categoria;
+    @Column(nullable = false, unique = true)
+    private String codigo; // ej. "solicitud", "tramite", "comunicacion_interna"
 
     @Column(nullable = false)
-    private String codigo;
-
-    @Column(nullable = false)
-    private String nombre;
+    private String nombre; // ej. "Solicitud"
 
     private String descripcion;
-
-    // Días hábiles de término legal. Solo tiene sentido si la categoría padre
-    // es "Solicitud" (algo con plazo de respuesta). En Trámite/Comunicación
-    // Interna se deja en null.
-    @Column(name = "dias_termino")
-    private Integer diasTermino;
 
     @Column(nullable = false)
     @Builder.Default

@@ -5,8 +5,7 @@ import lombok.Data;
 
 @Data
 public class PqrsRequest {
-    @NotBlank private String tipoPqrs;       // PETICION, QUEJA, RECLAMO, SUGERENCIA, DENUNCIA, FELICITACION
-    private Long categoriaId;
+    @NotNull private Long tipoCorrespondenciaId; // reemplaza a tipoPqrs + categoriaId
     @NotBlank private String asunto;
     private String descripcion;
     @NotBlank private String nombreTercero;
@@ -14,7 +13,7 @@ public class PqrsRequest {
     private String emailTercero;
     private String telefonoTercero;
     private String direccionTercero;
-    @NotBlank private String tipoPersona;    // NATURAL / JURIDICA
+    @NotBlank private String tipoPersona;
     @NotNull private Long dependenciaDestinoId;
-    @NotBlank private String canalEntrada;   // WEB, PRESENCIAL, TELEFONICO
+    @NotBlank private String canalEntrada;
 }

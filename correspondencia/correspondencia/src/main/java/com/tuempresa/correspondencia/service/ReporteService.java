@@ -18,10 +18,16 @@ public class ReporteService {
 
     public List<ReporteConteo> porTipo() {
         Map<String, Long> map = pqrsRepo.findAll().stream()
-                .collect(Collectors.groupingBy(Pqrs::getTipoPqrs, Collectors.counting()));
+                .filter(p -> p.getRadicado() != null
+                        && p.getRadicado().getTipoCorrespondencia() != null)
+                .collect(Collectors.groupingBy(
+                        p -> p.getRadicado().getTipoCorrespondencia().getNombre(),
+                        Collectors.counting()
+                ));
         return map.entrySet().stream()
                 .map(e -> new ReporteConteo(e.getKey(), e.getValue())).toList();
     }
+
 
     public Map<String, Object> cumplimientoTerminos() {
         List<Pqrs> todos = pqrsRepo.findAll();

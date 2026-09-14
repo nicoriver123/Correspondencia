@@ -4,9 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 @Data
-public class DependenciaRequest {
+public class CategoriaCorrespondenciaRequest {
     @NotBlank private String nombre;
-    @NotBlank private String codigo;
-    private Long dependenciaPadreId;
-    private Long jefeId;
+    private String descripcion;
 }

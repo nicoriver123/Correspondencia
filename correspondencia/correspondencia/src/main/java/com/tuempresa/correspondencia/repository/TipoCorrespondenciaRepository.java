@@ -6,4 +6,7 @@ import java.util.List;
 
 public interface TipoCorrespondenciaRepository extends JpaRepository<TipoCorrespondencia, Long> {
     List<TipoCorrespondencia> findByActivoTrue();
+    List<TipoCorrespondencia> findByCategoriaIdAndActivoTrue(Long categoriaId);
+    List<TipoCorrespondencia> findByCategoriaId(Long categoriaId);
+    boolean existsByCodigo(String codigo);
 }

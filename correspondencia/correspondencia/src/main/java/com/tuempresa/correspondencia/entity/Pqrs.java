@@ -15,12 +15,8 @@ public class Pqrs {
     @JoinColumn(name = "radicado_id", nullable = false, unique = true)
     private Radicado radicado;
 
-    @Column(name = "tipo_pqrs", nullable = false)
-    private String tipoPqrs; // PETICION, QUEJA, RECLAMO, SUGERENCIA, DENUNCIA, FELICITACION
-
-    @ManyToOne
-    @JoinColumn(name = "categoria_id")
-    private CategoriaPqrs categoria;
+    // La clasificación (tipo/categoría) y el plazo legal ahora viven en
+    // radicado.tipoCorrespondencia — ya no se duplican aquí.
 
     @Column(name = "fecha_limite_respuesta")
     private LocalDate fechaLimiteRespuesta;
@@ -33,5 +29,5 @@ public class Pqrs {
     private Usuario usuarioAsignado;
 
     @Column(name = "canal_entrada")
-    private String canalEntrada; // WEB, PRESENCIAL, TELEFONICO
+    private String canalEntrada;
 }

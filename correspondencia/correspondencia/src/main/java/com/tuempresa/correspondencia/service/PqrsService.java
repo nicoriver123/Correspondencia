@@ -37,12 +37,8 @@ public class PqrsService {
     private final EmailService emailService;
     private final AnexoService anexoService;
     private static final Logger log = LoggerFactory.getLogger(PqrsService.class);
+    private final TipoCorrespondenciaRepository tipoCorrespondenciaRepo;
 
-
-    private static final Map<String, Integer> TERMINOS_DIAS = Map.of(
-            "PETICION", 15, "QUEJA", 15, "RECLAMO", 15,
-            "SUGERENCIA", 10, "DENUNCIA", 10, "FELICITACION", 5
-    );
 
     @Transactional
     public PqrsResponse radicar(PqrsRequest req, Usuario quienRadica, List<MultipartFile> archivos) {
@@ -53,9 +49,14 @@ public class PqrsService {
 
         Dependencia destino = depRepo.findById(req.getDependenciaDestinoId())
                 .orElseThrow(() -> new ResourceNotFoundException("Dependencia no encontrada"));
-        CategoriaPqrs cat = req.getCategoriaId() != null ? catRepo.findById(req.getCategoriaId()).orElse(null) : null;
 
-        int dias = obtenerTerminosDias(req.getTipoPqrs());
+        TipoCorrespondencia tipoCorr = tipoCorrespondenciaRepo.findById(req.getTipoCorrespondenciaId())
+                .orElseThrow(() -> new ResourceNotFoundException("Tipo de correspondencia no encontrado"));
+
+        // Si el ADMIN no configuró días de término para este subtipo, se usa 15
+        // como valor conservador por defecto — pero lo ideal es que cada subtipo
+        // de la categoría "Solicitud" tenga su propio plazo bien configurado.
+        int dias = tipoCorr.getDiasTermino() != null ? tipoCorr.getDiasTermino() : 15;
         LocalDate fechaLimite = calcHabiles.sumarDiasHabiles(LocalDate.now(), dias);
 
         Radicado r = Radicado.builder()
@@ -67,14 +68,13 @@ public class PqrsService {
                 .dependenciaDestino(destino)
                 .usuarioRadica(quienRadica)
                 .medioRecepcion(req.getCanalEntrada())
+                .tipoCorrespondencia(tipoCorr)
                 .estado("RADICADO")
                 .build();
         radRepo.save(r);
 
         Pqrs p = new Pqrs();
         p.setRadicado(r);
-        p.setTipoPqrs(req.getTipoPqrs());
-        p.setCategoria(cat);
         p.setDiasHabilesTermino(dias);
         p.setFechaLimiteRespuesta(fechaLimite);
         p.setCanalEntrada(req.getCanalEntrada());
@@ -83,15 +83,16 @@ public class PqrsService {
         histRepo.save(HistorialTrazabilidad.builder()
                 .radicado(r).usuario(quienRadica).accion("RADICACION_PQRS")
                 .dependenciaDestino(destino)
-                .observacion("PQRS tipo " + req.getTipoPqrs() + ". Vence: " + fechaLimite)
+                .observacion("PQRS tipo " + tipoCorr.getNombre() + ". Vence: " + fechaLimite)
                 .build());
 
         if (destino.getJefe() != null) {
             notifService.enviar(destino.getJefe(), "Nueva PQRS en tu dependencia",
-                    r.getNumeroRadicado() + " - " + req.getAsunto(), p.getId(), r.getId());
+                    r.getNumeroRadicado() + " - " + req.getAsunto(),
+                    p.getId(), r.getId());
         }
         if (tercero.getEmail() != null && !tercero.getEmail().isBlank()) {
-            emailService.notificarRadicacion(tercero.getEmail(), r.getNumeroRadicado(), r.getAsunto(), "PQRS");
+            emailService.notificarRadicacion(tercero.getEmail(), r.getNumeroRadicado(), r.getAsunto(), tipoCorr.getNombre());
         }
 
         if (archivos != null) {
@@ -100,8 +101,7 @@ public class PqrsService {
                     try {
                         anexoService.subir(r.getId(), archivo, quienRadica);
                     } catch (java.io.IOException e) {
-                        log.warn("No se pudo guardar el anexo {}: {}",
-                                archivo.getOriginalFilename(), e.getMessage());
+                        log.warn("No se pudo guardar el anexo {}: {}", archivo.getOriginalFilename(), e.getMessage());
                     }
                 }
             }
@@ -110,9 +110,6 @@ public class PqrsService {
         return toDto(p);
     }
 
-    private int obtenerTerminosDias(String tipo) {
-        return TERMINOS_DIAS.getOrDefault(tipo.toUpperCase(), 15);
-    }
 
     public Page<PqrsResponse> listar(PqrsFilter filter, Pageable p) {
         Specification<Pqrs> spec = PqrsSpecification.conFiltros(filter);
@@ -244,9 +241,11 @@ public class PqrsService {
 
         return PqrsResponse.builder()
                 .id(p.getId())
+                .radicadoId(r.getId())
                 .numeroRadicado(r.getNumeroRadicado())
-                .tipoPqrs(p.getTipoPqrs())
-                .categoria(p.getCategoria() != null ? p.getCategoria().getNombre() : null)
+                .categoriaCorrespondencia(r.getTipoCorrespondencia() != null && r.getTipoCorrespondencia().getCategoria() != null
+                        ? r.getTipoCorrespondencia().getCategoria().getNombre() : null)
+                .tipoCorrespondencia(r.getTipoCorrespondencia() != null ? r.getTipoCorrespondencia().getNombre() : null)
                 .asunto(r.getAsunto())
                 .descripcion(r.getDescripcion())
                 .tercero(r.getTercero() != null ? r.getTercero().getNombreRazonSocial() : null)
@@ -259,7 +258,6 @@ public class PqrsService {
                 .diasRestantes(diasRest)
                 .canalEntrada(p.getCanalEntrada())
                 .fechaRadicacion(r.getFechaRadicacion())
-                .radicadoId(r.getId())
                 .build();
     }
     public List<PqrsResponse> listarVencidos() {

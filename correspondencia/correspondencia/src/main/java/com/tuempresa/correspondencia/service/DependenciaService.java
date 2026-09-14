@@ -1,8 +1,10 @@
 package com.tuempresa.correspondencia.service;
 
 import com.tuempresa.correspondencia.dto.DependenciaRequest;
+import com.tuempresa.correspondencia.dto.DependenciaResponse;
 import com.tuempresa.correspondencia.entity.Dependencia;
 import com.tuempresa.correspondencia.entity.Usuario;
+import com.tuempresa.correspondencia.exception.BusinessException;
 import com.tuempresa.correspondencia.exception.ResourceNotFoundException;
 import com.tuempresa.correspondencia.repository.DependenciaRepository;
 import com.tuempresa.correspondencia.repository.UsuarioRepository;
@@ -15,30 +17,78 @@ import java.util.List;
 @RequiredArgsConstructor
 public class DependenciaService {
     private final DependenciaRepository repo;
-    private final UsuarioRepository userRepo;
+    private final UsuarioRepository usuarioRepo;
 
-    public Dependencia crear(DependenciaRequest req) {
-        Dependencia padre = req.getDependenciaPadreId() != null
-                ? repo.findById(req.getDependenciaPadreId()).orElse(null) : null;
-        Usuario jefe = req.getJefeId() != null
-                ? userRepo.findById(req.getJefeId()).orElse(null) : null;
-        return repo.save(Dependencia.builder()
-                .nombre(req.getNombre()).codigo(req.getCodigo())
-                .dependenciaPadre(padre).jefe(jefe).build());
+    public List<DependenciaResponse> listar(boolean incluirInactivas) {
+        List<Dependencia> lista = incluirInactivas ? repo.findAll() : repo.findByActivoTrue();
+        return lista.stream().map(this::toDto).toList();
     }
 
-    public Dependencia actualizar(Long id, DependenciaRequest req) {
+    public DependenciaResponse obtener(Long id) {
+        return toDto(repo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Dependencia no encontrada")));
+    }
+
+    public DependenciaResponse crear(DependenciaRequest req) {
+        if (repo.existsByCodigo(req.getCodigo())) {
+            throw new BusinessException("Ya existe una dependencia con ese código.");
+        }
+        Dependencia d = Dependencia.builder()
+                .nombre(req.getNombre())
+                .codigo(req.getCodigo())
+                .dependenciaPadre(resolverPadre(req.getDependenciaPadreId(), null))
+                .jefe(resolverJefe(req.getJefeId()))
+                .build();
+        return toDto(repo.save(d));
+    }
+
+    public DependenciaResponse actualizar(Long id, DependenciaRequest req) {
         Dependencia d = repo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Dependencia no encontrada"));
+
+        if (!d.getCodigo().equals(req.getCodigo()) && repo.existsByCodigo(req.getCodigo())) {
+            throw new BusinessException("Ya existe una dependencia con ese código.");
+        }
+
         d.setNombre(req.getNombre());
         d.setCodigo(req.getCodigo());
-        if (req.getDependenciaPadreId() != null)
-            d.setDependenciaPadre(repo.findById(req.getDependenciaPadreId()).orElse(null));
-        if (req.getJefeId() != null)
-            d.setJefe(userRepo.findById(req.getJefeId()).orElse(null));
-        return repo.save(d);
+        d.setDependenciaPadre(resolverPadre(req.getDependenciaPadreId(), id));
+        d.setJefe(resolverJefe(req.getJefeId()));
+        return toDto(repo.save(d));
     }
 
-    public List<Dependencia> listar() { return repo.findAll(); }
-    public List<Dependencia> listarRaices() { return repo.findByDependenciaPadreIsNull(); }
+    public void cambiarEstado(Long id, boolean activo) {
+        Dependencia d = repo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Dependencia no encontrada"));
+        d.setActivo(activo);
+        repo.save(d);
+    }
+
+    private Dependencia resolverPadre(Long padreId, Long idPropio) {
+        if (padreId == null) return null;
+        if (padreId.equals(idPropio)) {
+            throw new BusinessException("Una dependencia no puede ser su propia dependencia padre.");
+        }
+        return repo.findById(padreId)
+                .orElseThrow(() -> new ResourceNotFoundException("Dependencia padre no encontrada"));
+    }
+
+    private Usuario resolverJefe(Long jefeId) {
+        if (jefeId == null) return null;
+        return usuarioRepo.findById(jefeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario (jefe) no encontrado"));
+    }
+
+    private DependenciaResponse toDto(Dependencia d) {
+        return DependenciaResponse.builder()
+                .id(d.getId())
+                .nombre(d.getNombre())
+                .codigo(d.getCodigo())
+                .dependenciaPadreId(d.getDependenciaPadre() != null ? d.getDependenciaPadre().getId() : null)
+                .dependenciaPadreNombre(d.getDependenciaPadre() != null ? d.getDependenciaPadre().getNombre() : null)
+                .jefeId(d.getJefe() != null ? d.getJefe().getId() : null)
+                .jefeNombre(d.getJefe() != null ? d.getJefe().getNombre() : null)
+                .activo(d.getActivo())
+                .build();
+    }
 }

@@ -234,13 +234,15 @@ public class DashboardService {
         // ============================================================
 
         Map<String, Long> porTipo = todas.stream()
-                .filter(p -> p.getTipoPqrs() != null)
+                .filter(p -> p.getRadicado() != null
+                        && p.getRadicado().getTipoCorrespondencia() != null)
                 .collect(
                         Collectors.groupingBy(
-                                Pqrs::getTipoPqrs,
+                                p -> p.getRadicado().getTipoCorrespondencia().getNombre(),
                                 Collectors.counting()
                         )
                 );
+
 
 
         // ============================================================

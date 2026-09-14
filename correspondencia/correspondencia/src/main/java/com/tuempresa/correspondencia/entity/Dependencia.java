@@ -23,4 +23,8 @@ public class Dependencia {
     @ManyToOne
     @JoinColumn(name = "jefe_id")
     private Usuario jefe;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean activo = true;
 }

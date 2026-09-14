@@ -7,10 +7,12 @@ import java.time.LocalDateTime;
 @Data @Builder
 public class PqrsResponse {
     private Long id;
+    private Long radicadoId;
     private String numeroRadicado;
-    private String tipoPqrs;
-    private String categoria;
+    private String categoriaCorrespondencia; // ej. "Solicitud"
+    private String tipoCorrespondencia;      // ej. "Petición externa" (el subtipo)
     private String asunto;
+    private String descripcion;
     private String tercero;
     private String dependenciaDestino;
     private String usuarioAsignado;
@@ -21,7 +23,4 @@ public class PqrsResponse {
     private Integer diasRestantes;
     private String canalEntrada;
     private LocalDateTime fechaRadicacion;
-    private String descripcion;
-    private Long radicadoId;
-
 }

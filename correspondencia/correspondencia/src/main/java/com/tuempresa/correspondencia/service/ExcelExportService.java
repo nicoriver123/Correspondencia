@@ -57,8 +57,16 @@ public class ExcelExportService {
         for (Pqrs p : lista) {
             Row row = sheet.createRow(r++);
             row.createCell(0).setCellValue(p.getRadicado().getNumeroRadicado());
-            row.createCell(1).setCellValue(p.getTipoPqrs());
-            row.createCell(2).setCellValue(p.getCategoria() != null ? p.getCategoria().getNombre() : "");
+
+            // CAMBIO: Acceder a través de radicado.tipoCorrespondencia
+            row.createCell(1).setCellValue(p.getRadicado().getTipoCorrespondencia() != null
+                    ? p.getRadicado().getTipoCorrespondencia().getNombre() : "");
+
+            // CAMBIO: Acceder a la categoría del tipo de correspondencia
+            row.createCell(2).setCellValue(p.getRadicado().getTipoCorrespondencia() != null
+                    && p.getRadicado().getTipoCorrespondencia().getCategoria() != null
+                    ? p.getRadicado().getTipoCorrespondencia().getCategoria().getNombre() : "");
+
             row.createCell(3).setCellValue(p.getRadicado().getAsunto());
             row.createCell(4).setCellValue(p.getRadicado().getTercero() != null
                     ? p.getRadicado().getTercero().getNombreRazonSocial() : "");
@@ -70,12 +78,14 @@ public class ExcelExportService {
             long dias = p.getFechaLimiteRespuesta() != null
                     ? java.time.temporal.ChronoUnit.DAYS.between(LocalDate.now(), p.getFechaLimiteRespuesta()) : 0;
             row.createCell(8).setCellValue(dias);
-            boolean vencido = LocalDate.now().isAfter(p.getFechaLimiteRespuesta())
+            boolean vencido = p.getFechaLimiteRespuesta() != null
+                    && LocalDate.now().isAfter(p.getFechaLimiteRespuesta())
                     && !"RESPONDIDO".equals(p.getRadicado().getEstado())
                     && !"CERRADO".equals(p.getRadicado().getEstado());
             row.createCell(9).setCellValue(vencido ? "SÍ" : "NO");
         }
         for (int i = 0; i < cols.length; i++) sheet.autoSizeColumn(i);
+
     }
 
     private void crearHojaCumplimiento(XSSFWorkbook wb) {

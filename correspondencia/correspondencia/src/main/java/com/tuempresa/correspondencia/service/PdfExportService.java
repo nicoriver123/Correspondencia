@@ -83,12 +83,15 @@ public class PdfExportService {
                 Paragraph sub = new Paragraph("INFORMACIÓN PQRS", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12));
                 doc.add(sub);
                 doc.add(new Paragraph(" "));
-                agregarFila(table, "Tipo PQRS:", pqrs.getTipoPqrs(), labelFont, valueFont);
-                agregarFila(table, "Categoría:", pqrs.getCategoria() != null ? pqrs.getCategoria().getNombre() : "", labelFont, valueFont);
+
+                // CAMBIO: Acceder a través de radicado.tipoCorrespondencia
+                agregarFila(table, "Tipo PQRS:", r.getTipoCorrespondencia() != null ? r.getTipoCorrespondencia().getNombre() : "", labelFont, valueFont);
+                agregarFila(table, "Categoría:", r.getTipoCorrespondencia() != null && r.getTipoCorrespondencia().getCategoria() != null ? r.getTipoCorrespondencia().getCategoria().getNombre() : "", labelFont, valueFont);
                 agregarFila(table, "Fecha límite respuesta:", pqrs.getFechaLimiteRespuesta() != null ? pqrs.getFechaLimiteRespuesta().toString() : "", labelFont, valueFont);
                 agregarFila(table, "Días hábiles término:", String.valueOf(pqrs.getDiasHabilesTermino()), labelFont, valueFont);
                 agregarFila(table, "Canal de entrada:", nvl(pqrs.getCanalEntrada()), labelFont, valueFont);
             }
+
 
             doc.add(table);
 
